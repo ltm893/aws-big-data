@@ -44,7 +44,7 @@ def status_poller(intro, done_status, func):
     :param func: The function to poll for status. This function must eventually
                  return the expected done_status or polling will continue indefinitely.
     """
-    emr_basics.logger.setLevel(logging.WARNING)
+    emr_basics.logger.setLevel(logging.DEBUG)
     status = None
     print(intro)
     print("Current status: ", end="")
@@ -58,7 +58,7 @@ def status_poller(intro, done_status, func):
         sys.stdout.flush()
         time.sleep(10)
     print()
-    emr_basics.logger.setLevel(logging.INFO)
+    emr_basics.logger.setLevel(logging.DEBUG)
 
 
 def setup_bucket(bucket_name, script_file_name, script_key, s3_resource):
@@ -71,6 +71,7 @@ def setup_bucket(bucket_name, script_file_name, script_key, s3_resource):
     :param s3_resource: The Boto3 Amazon S3 resource object.
     :return: The newly created bucket.
     """
+    '''
     try:
         bucket = s3_resource.create_bucket(
             Bucket=bucket_name,
@@ -83,6 +84,15 @@ def setup_bucket(bucket_name, script_file_name, script_key, s3_resource):
     except ClientError:
         logger.exception("Couldn't create bucket %s.", bucket_name)
         raise
+   
+    '''
+
+    try: 
+        bucket = s3_resource.Bucket(bucket_name)
+    except ClientError:
+        logger.exception("Couldn't get bucket %s.", bucket_name)
+        raise
+
 
     try:
         bucket.upload_file(script_file_name, script_key)
@@ -245,11 +255,14 @@ def create_security_groups(prefix, ec2_resource):
     :return: The newly created security groups.
     """
     try:
+        ''' 
         default_vpc = list(
             ec2_resource.vpcs.filter(
                 Filters=[{"Name": "isDefault", "Values": ["true"]}]
             )
         )[0]
+        '''
+        default_vpc = ec2_resource.Vpc('vpc-0bd6dcc70a1ceb4fb')
         logger.info("Got default VPC %s.", default_vpc.id)
     except ClientError:
         logger.exception("Couldn't get VPCs.")
@@ -381,6 +394,102 @@ def my_demo_cluster():
 
     prefix = f"ltm893-emr-demo"
 
+    session = boto3.session.Session(profile_name='todd')
+    s3_resource =  session.resource("s3")
+    iam_resource =  session.resource("iam")
+    emr_client =  session.client("emr")
+    ec2_resource =  session.resource("ec2")
+
+    # Set up resources for the demo.
+    # bucket_name = f"{prefix}-{time.time_ns()}"
+    bucket_name = 'ltm893-emr-dev'
+    script_file_name = "pyspark_estimate_pi.py"
+    script_key = f"scripts/{script_file_name}"
+    bucket = setup_bucket(bucket_name, script_file_name, script_key, s3_resource)
+    job_flow_role, service_role = create_roles(
+        f"{prefix}-ec2-role", f"{prefix}-service-role", iam_resource
+    )
+    security_groups = create_security_groups(prefix, ec2_resource)
+
+    # Run the job.
+    output_prefix = "pi-calc-output"
+    pi_step = {
+        "name": "estimate-pi-step",
+        "script_uri": f"s3://{bucket_name}/{script_key}",
+        "script_args": [
+            "--partitions",
+            "3",
+            "--output_uri",
+            f"s3://{bucket_name}/{output_prefix}",
+        ],
+    }
+    print("Wait for 10 seconds to give roles and profiles time to propagate...")
+    time.sleep(10)
+    max_tries = 5
+    while True:
+        try:
+            cluster_id = emr_basics.run_job_flow(
+                f"{prefix}-cluster",
+                f"s3://{bucket_name}/logs",
+                False,
+                ["Hadoop", "Hive", "Spark"],
+                job_flow_role,
+                service_role,
+                security_groups,
+                [pi_step],
+                emr_client,
+            )
+            print(f"Running job flow for cluster {cluster_id}...")
+            break
+        except ClientError as error:
+            max_tries -= 1
+            if (
+                max_tries > 0
+                and error.response["Error"]["Code"] == "ValidationException"
+            ):
+                print("Instance profile is not ready, let's give it more time...")
+                time.sleep(10)
+            else:
+                raise
+
+    status_poller(
+        "Waiting for cluster, this typically takes several minutes...",
+        "RUNNING",
+        lambda: emr_basics.describe_cluster(cluster_id, emr_client)["Status"]["State"],
+    )
+    status_poller(
+        "Waiting for step to complete...",
+        "PENDING",
+        lambda: emr_basics.list_steps(cluster_id, emr_client)[0]["Status"]["State"],
+    )
+    status_poller(
+        "Waiting for cluster to terminate.",
+        "TERMINATED",
+        lambda: emr_basics.describe_cluster(cluster_id, emr_client)["Status"]["State"],
+    )
+
+    print(
+        f"Job complete!. The script, logs, and output for this demo are in "
+        f"Amazon S3 bucket {bucket_name}. The output is:"
+    )
+    for obj in bucket.objects.filter(Prefix=output_prefix):
+        print(obj.get()["Body"].read().decode())
+
+    # Clean up demo resources (if you want to).
+    remove_everything = input(
+        f"Do you want to delete the security roles, groups, and bucket (y/n)? "
+    )
+    if remove_everything.lower() == "y":
+        delete_security_groups(security_groups)
+        delete_roles([job_flow_role, service_role])
+        delete_bucket(bucket)
+    else:
+        print(
+            f"Remember that objects kept in an Amazon S3 bucket can incur charges"
+            f"against your account."
+        )
+    print("Thanks for watching!")
+
 def demo_short_lived_cluster():
     """
     Shows how to create a short-lived cluster that runs a step and automatically
@@ -500,11 +609,11 @@ def demo_long_lived_cluster():
 
     prefix = "demo-long-emr"
     
-    
-    s3_resource = boto3.resource("s3")
-    iam_resource = boto3.resource("iam")
-    emr_client = boto3.client("emr")
-    ec2_resource = boto3.resource("ec2")
+    session = boto3.session.Session(profile_name='todd')
+    s3_resource = session.resource("s3")
+    iam_resource = session.resource("iam")
+    emr_client = session.client("emr")
+    ec2_resource = session.resource("ec2")
     
 
     # Set up resources for the demo.
