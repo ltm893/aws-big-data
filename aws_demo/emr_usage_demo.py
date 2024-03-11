@@ -71,7 +71,7 @@ def setup_bucket(bucket_name, script_file_name, script_key, s3_resource):
     :param s3_resource: The Boto3 Amazon S3 resource object.
     :return: The newly created bucket.
     """
-    '''
+    
     try:
         bucket = s3_resource.create_bucket(
             Bucket=bucket_name,
@@ -92,7 +92,7 @@ def setup_bucket(bucket_name, script_file_name, script_key, s3_resource):
     except ClientError:
         logger.exception("Couldn't get bucket %s.", bucket_name)
         raise
-
+    '''
 
     try:
         bucket.upload_file(script_file_name, script_key)
@@ -255,7 +255,7 @@ def create_security_groups(prefix, ec2_resource):
     :return: The newly created security groups.
     """
     try:
-        ''' 
+         
         default_vpc = list(
             ec2_resource.vpcs.filter(
                 Filters=[{"Name": "isDefault", "Values": ["true"]}]
@@ -264,6 +264,7 @@ def create_security_groups(prefix, ec2_resource):
         '''
         default_vpc = ec2_resource.Vpc('vpc-0bd6dcc70a1ceb4fb')
         logger.info("Got default VPC %s.", default_vpc.id)
+        '''
     except ClientError:
         logger.exception("Couldn't get VPCs.")
         raise
@@ -508,9 +509,14 @@ def demo_short_lived_cluster():
     ec2_resource =  session.resource("ec2")
 
     # Set up resources for the demo.
+    
+
     bucket_name = f"{prefix}-{time.time_ns()}"
     script_file_name = "pyspark_estimate_pi.py"
     script_key = f"scripts/{script_file_name}"
+    bucket_name = 'ltm893-emr-dev'
+    script_key = f"scripts/{script_file_name}"
+    
     bucket = setup_bucket(bucket_name, script_file_name, script_key, s3_resource)
     job_flow_role, service_role = create_roles(
         f"{prefix}-ec2-role", f"{prefix}-service-role", iam_resource
