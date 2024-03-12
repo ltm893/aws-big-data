@@ -1,26 +1,30 @@
-import argparse
-
-from pyspark.sql import SparkSession
-
+import numpy as np
+import gzip
+import boto3
+from botocore.exceptions import ClientError
+import logging
 import json
 import random
 import string
 from uszipcode import SearchEngine
 
+
+
 lower_list = list(string.ascii_lowercase)
 upper_list = list(string.ascii_uppercase)
 
 
-zip_search = SearchEngine(simple_zipcode=False)
-all_zip_codes = zip_search.by_pattern('', returns=200000)
+logger = logging.getLogger(__name__)
 
+zip_search = SearchEngine()
+all_zips = [obj.zipcode  for obj in  zip_search.by_population(lower=50, upper=120000,returns=100000) ]
+#print(all_zips[:5])
 
 def make_random_string(max_length):
     if max_length < 3 :
         return("needs to be larger than 2")
     r_string = random.choice(upper_list)
     rr = random.randrange(3,max_length)
-    #print(rr)
     for l in random.choices(lower_list,k=rr):
         r_string = r_string + l
     return r_string
@@ -37,7 +41,7 @@ def make_random_number_string(max_length):
     return r_string
 
 def get_random_zip():
-    return random.choice(all_zip_codes)
+    return random.choice(all_zips)
 
     
 def make_person():
@@ -47,32 +51,84 @@ def make_person():
     person['zip']  = get_random_zip()
     return person
 
-def make_zip_rating():
-    zip_rating = [ [z, random.randrange(1,11)] for z in all_zip_codes ]
+def make_zip_csv(zg_filename):
+    zip_group =  [[z, random.randrange(1,11)]  for z in all_zips ]
+    np.savetxt(zg_filename, zip_group , delimiter =", ",fmt ='% s')
+   
+def make_person_json(people_filenname):
+    test_objects = [make_person() for i in range(1,1000000) ]
+    with gzip.open(people_filenname, 'wt') as f:
+        f.write(json.dumps(test_objects))
+
+
+def create_bucket(bucket_name,s3_resource):
+    try:
+        bucket = s3_resource.create_bucket(
+            Bucket=bucket_name,
+            CreateBucketConfiguration={
+                "LocationConstraint": s3_resource.meta.client.meta.region_name
+            },
+        )
+        bucket.wait_until_exists()
+        logger.info("Created bucket %s.", bucket_name)
+    except ClientError:
+        logger.exception("Couldn't create bucket %s.", bucket_name)
+        raise
+
+    return bucket
 
 
 
-def make_k_people(output_uri):
-        with SparkSession.builder.appName("Make 1k People").getOrCreate() as spark:
-            one_k_people = [make_person() for i in range(1,1000) ]
-            # one_k_people_json = json.dumps(one_k_people)
-            df = spark.createDataFrame(one_k_people)
-            df.write.json(output_uri)
+def upload_to_bucket(bucket, local_file_name, bucket_key, s3_resource):
+    
+    try:
+        bucket.upload_file(local_file_name, bucket_key)
+        logger.info(
+            "Uploaded script %s to %s.", local_file_name, f"{bucket_name}/{bucket_key}"
+        )
+    except ClientError:
+        logger.exception("Couldn't upload %s to %s.", local_file_name, bucket_name)
+        raise
+
+def delete_bucket_by_name(bucket_name,s3_resource):
+  
+    try:
+        bucket = s3_resource.Bucket(bucket_name)
+        if bucket.creation_date:
+            print("%s exists" % bucket_name)
+        else:
+            print("%s does not exist" % bucket_name)
+            return
+        bucket.objects.delete()
+        bucket.delete()
+        # logger.info("Emptied and removed bucket %s.", bucket.name)
+        print(f"Emptied and removed bucket {bucket_name}")
+    except ClientError:
+        logger.exception(f'Couldn\'t remove bucket {bucket_name}')
+        raise
+
+if __name__ == '__main__':
+    people_filenname = 'people.json.gz'
+    zg_filename = 'zip_group.csv.gz'
+    session = boto3.session.Session(profile_name='todd') 
+    s3_resource =  session.resource("s3")
+    bucket_name = 'ltm893-emr-spark-testing'
+
+    delete_bucket_by_name(bucket_name,s3_resource )
+    print("Making person objects")
+    make_person_json(people_filenname)
+    print("Making zip csv file")
+    make_zip_csv(zg_filename)
+    print("Creating in %s" % bucket_name)
+    bucket = create_bucket(bucket_name,s3_resource)
+    print("Uploading %s to %s" % (people_filenname , bucket_name))
+    upload_to_bucket(bucket,people_filenname,'test_people.json.gz', s3_resource)
+    print("Uploading %s to %s" % (zg_filename, bucket_name) )
+    upload_to_bucket(bucket,zg_filename ,'test_zip_group.gz', s3_resource)
 
 
-#with open("sample.json", "w") as outfile:
-#    outfile.write(one_k_people_json)
 
 
-''' 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    #parser.add_argument(
-    #    '--data_source', help="The URI for you CSV restaurant data, like an S3 bucket location.")
-    parser.add_argument(
-        '--output_uri', help="The URI where output is saved, like an S3 bucket location.")
-    args = parser.parse_args()
 
-    make_k_people(args.output_uri)
 
-'''
+

@@ -404,7 +404,7 @@ def my_demo_cluster():
     # Set up resources for the demo.
     # bucket_name = f"{prefix}-{time.time_ns()}"
     bucket_name = 'ltm893-emr-dev'
-    script_file_name = "pyspark_estimate_pi.py"
+    script_file_name = "create _objects.py"
     script_key = f"scripts/{script_file_name}"
     bucket = setup_bucket(bucket_name, script_file_name, script_key, s3_resource)
     job_flow_role, service_role = create_roles(
@@ -413,9 +413,9 @@ def my_demo_cluster():
     security_groups = create_security_groups(prefix, ec2_resource)
 
     # Run the job.
-    output_prefix = "pi-calc-output"
+    output_prefix = "test-objects-output"
     pi_step = {
-        "name": "estimate-pi-step",
+        "name": "create-test-objects-step",
         "script_uri": f"s3://{bucket_name}/{script_key}",
         "script_args": [
             "--partitions",
