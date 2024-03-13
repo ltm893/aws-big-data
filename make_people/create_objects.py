@@ -8,11 +8,8 @@ import random
 import string
 from uszipcode import SearchEngine
 
-
-
 lower_list = list(string.ascii_lowercase)
 upper_list = list(string.ascii_uppercase)
-
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +116,7 @@ if __name__ == '__main__':
     make_person_json(people_filenname)
     print("Making zip csv file")
     make_zip_csv(zg_filename)
-    print("Creating in %s" % bucket_name)
+    print("Creating bucket %s" % bucket_name)
     bucket = create_bucket(bucket_name,s3_resource)
     print("Uploading %s to %s" % (people_filenname , bucket_name))
     upload_to_bucket(bucket,people_filenname,'test_people.json.gz', s3_resource)
