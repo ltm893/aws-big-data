@@ -1,5 +1,7 @@
 #logs dir
 logs/
+#output dir
+output/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

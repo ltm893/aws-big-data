@@ -24,9 +24,10 @@ def make_random_string(max_length):
     rr = random.randrange(3,max_length)
     for l in random.choices(lower_list,k=rr):
         r_string = r_string + l
-    return r_string
+    return  r_string
 
-def make_random_number_string(max_length):
+
+def make_random_digit_string(max_length):
     if max_length < 2 :
         return("needs to be larger than 1")
     first_digit_choices = [ str(i) for i in range(1,10) ]
@@ -44,7 +45,7 @@ def get_random_zip():
 def make_person():
     person = {}
     person['name'] = make_random_string(6) + ' ' + make_random_string(12)
-    person['usage'] =  make_random_number_string(6)
+    person['usage'] =  make_random_digit_string(6)
     person['zip']  = get_random_zip()
     return person
 
@@ -105,8 +106,8 @@ def delete_bucket_by_name(bucket_name,s3_resource):
         raise
 
 if __name__ == '__main__':
-    people_filenname = 'people.json.gz'
-    zg_filename = 'zip_group.csv.gz'
+    people_filenname = 'ouput/people.json.gz'
+    zg_filename = 'output/zip_group.csv.gz'
     session = boto3.session.Session(profile_name='todd') 
     s3_resource =  session.resource("s3")
     bucket_name = 'ltm893-emr-spark-testing'
