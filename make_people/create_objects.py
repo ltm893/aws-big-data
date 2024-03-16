@@ -8,10 +8,10 @@ import random
 import string
 from uszipcode import SearchEngine
 
-lower_list = list(string.ascii_lowercase)
-upper_list = list(string.ascii_uppercase)
-
 logger = logging.getLogger(__name__)
+logging.basicConfig(filename='logs/running.log', level=logging.INFO,
+                    format='%(asctime)s %(message)s', datefmt='%Y-%m-%dT%H:%M:%S%z')
+logger.info('Beginging run')
 
 zip_search = SearchEngine()
 all_zips = [obj.zipcode  for obj in  zip_search.by_population(lower=50, upper=120000,returns=100000) ]
@@ -20,9 +20,9 @@ all_zips = [obj.zipcode  for obj in  zip_search.by_population(lower=50, upper=12
 def make_random_string(max_length):
     if max_length < 3 :
         return("needs to be larger than 2")
-    r_string = random.choice(upper_list)
+    r_string = random.choice(list(string.ascii_uppercase))
     rr = random.randrange(3,max_length)
-    for l in random.choices(lower_list,k=rr):
+    for l in random.choices(list(string.ascii_lowercase),k=rr):
         r_string = r_string + l
     return  r_string
 
@@ -78,14 +78,14 @@ def create_bucket(bucket_name,s3_resource):
 
 
 def upload_to_bucket(bucket, local_file_name, bucket_key, s3_resource):
-    
     try:
         bucket.upload_file(local_file_name, bucket_key)
+        
         logger.info(
-            "Uploaded script %s to %s.", local_file_name, f"{bucket_name}/{bucket_key}"
+            "Uploaded script %s to %s.", local_file_name, f"{bucket.name}/{bucket_key}"
         )
     except ClientError:
-        logger.exception("Couldn't upload %s to %s.", local_file_name, bucket_name)
+        logger.exception("Couldn't upload %s to %s.", local_file_name, bucket.name)
         raise
 
 def delete_bucket_by_name(bucket_name,s3_resource):
@@ -99,14 +99,14 @@ def delete_bucket_by_name(bucket_name,s3_resource):
             return
         bucket.objects.delete()
         bucket.delete()
-        # logger.info("Emptied and removed bucket %s.", bucket.name)
+        logger.info("Emptied and removed bucket %s.", bucket.name)
         print(f"Emptied and removed bucket {bucket_name}")
     except ClientError:
         logger.exception(f'Couldn\'t remove bucket {bucket_name}')
         raise
 
 if __name__ == '__main__':
-    people_filenname = 'ouput/people.json.gz'
+    people_filenname = 'output/people.json.gz'
     zg_filename = 'output/zip_group.csv.gz'
     session = boto3.session.Session(profile_name='todd') 
     s3_resource =  session.resource("s3")
