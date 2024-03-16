@@ -19,7 +19,7 @@ all_zips = [obj.zipcode  for obj in  zip_search.by_population(lower=50, upper=12
 
 def make_random_string(max_length):
     if max_length < 3 :
-        return("needs to be larger than 2")
+        raise Exception("max length parameter needs to be larger than 2")
     r_string = random.choice(list(string.ascii_uppercase))
     rr = random.randrange(3,max_length)
     for l in random.choices(list(string.ascii_lowercase),k=rr):
@@ -29,7 +29,7 @@ def make_random_string(max_length):
 
 def make_random_digit_string(max_length):
     if max_length < 2 :
-        return("needs to be larger than 1")
+        raise Exception("max length parameter needs to be larger than 1")
     first_digit_choices = [ str(i) for i in range(1,10) ]
     other_digit_choices = [ str(i) for i in range(10) ]
     rr = random.randrange(3,max_length)
@@ -44,7 +44,7 @@ def get_random_zip():
     
 def make_person():
     person = {}
-    person['name'] = make_random_string(6) + ' ' + make_random_string(12)
+    person['name'] = make_random_string(5) + ' ' + make_random_string(12)
     person['usage'] =  make_random_digit_string(6)
     person['zip']  = get_random_zip()
     return person
@@ -119,9 +119,9 @@ if __name__ == '__main__':
     make_zip_csv(zg_filename)
     print("Creating bucket %s" % bucket_name)
     bucket = create_bucket(bucket_name,s3_resource)
-    print("Uploading %s to %s" % (people_filenname , bucket_name))
+    print("Uploading %s to s3://%s" % (people_filenname , bucket_name))
     upload_to_bucket(bucket,people_filenname,'test_people.json.gz', s3_resource)
-    print("Uploading %s to %s" % (zg_filename, bucket_name) )
+    print("Uploading %s to s3://%s" % (zg_filename, bucket_name) )
     upload_to_bucket(bucket,zg_filename ,'test_zip_group.gz', s3_resource)
 
 
