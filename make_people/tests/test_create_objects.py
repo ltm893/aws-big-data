@@ -5,8 +5,10 @@ import boto3
 from boto3.s3.transfer import S3UploadFailedError
 from botocore.exceptions import ClientError
 from tempfile import NamedTemporaryFile
+from uszips import all_zips
 
 
+   
 
 @pytest.fixture
 def bucket_name():
@@ -52,3 +54,6 @@ def test_make_random_digit_string():
     assert make_random_digit_string(7)[0] != '0' , "first character zerpr"
     assert any(char.isalpha() for char in make_random_digit_string(9) ) == False, 'has letter' 
 
+@pytest.mark.local_unit
+def test_create_zips():
+    assert len(all_zips) > 25000 ,'us_zips not long enough'

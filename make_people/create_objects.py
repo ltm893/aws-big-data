@@ -6,16 +6,16 @@ import logging
 import json
 import random
 import string
-from uszipcode import SearchEngine
+from uszips import all_zips
+import argparse
+
+#import timeit
+
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename='logs/running.log', level=logging.INFO,
+logging.basicConfig(filename=f'logs/{__name__}.log', level=logging.INFO,
                     format='%(asctime)s %(message)s', datefmt='%Y-%m-%dT%H:%M:%S%z')
 logger.info('Beginging run')
-
-zip_search = SearchEngine()
-all_zips = [obj.zipcode  for obj in  zip_search.by_population(lower=50, upper=120000,returns=100000) ]
-#print(all_zips[:5])
 
 def make_random_string(max_length):
     if max_length < 3 :
@@ -80,7 +80,6 @@ def create_bucket(bucket_name,s3_resource):
 def upload_to_bucket(bucket, local_file_name, bucket_key, s3_resource):
     try:
         bucket.upload_file(local_file_name, bucket_key)
-        
         logger.info(
             "Uploaded script %s to %s.", local_file_name, f"{bucket.name}/{bucket_key}"
         )
@@ -89,7 +88,6 @@ def upload_to_bucket(bucket, local_file_name, bucket_key, s3_resource):
         raise
 
 def delete_bucket_by_name(bucket_name,s3_resource):
-  
     try:
         bucket = s3_resource.Bucket(bucket_name)
         if bucket.creation_date:
@@ -106,9 +104,15 @@ def delete_bucket_by_name(bucket_name,s3_resource):
         raise
 
 if __name__ == '__main__':
+                
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("profile_name", help="AWS Profile Name")
+    args = parser.parse_args()
+
     people_filenname = 'output/people.json.gz'
     zg_filename = 'output/zip_group.csv.gz'
-    session = boto3.session.Session(profile_name='todd') 
+    session = boto3.session.Session(profile_name=args.profile_name) 
     s3_resource =  session.resource("s3")
     bucket_name = 'ltm893-emr-spark-testing'
 
