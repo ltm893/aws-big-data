@@ -50,7 +50,7 @@ def make_person():
     return person
 
 def make_zip_csv(zg_filename):
-    zip_group =  [[z, random.randrange(1,11)]  for z in all_zips ]
+    zip_group =  [[z,random.randrange(1,11)]  for z in all_zips ]
     np.savetxt(zg_filename, zip_group , delimiter =", ",fmt ='% s')
    
 def make_person_json(people_filenname):
@@ -107,14 +107,16 @@ if __name__ == '__main__':
                 
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("profile_name", help="AWS Profile Name")
+    parser.add_argument('--profile_name', type=str, required=True, help='AWS authenticated profile')
+    parser.add_argument('--bucket_name', type=str, required=True, help='Unique bucket. Will remove and recreate bucket')
     args = parser.parse_args()
+    #print(args)
 
     people_filenname = 'output/people.json.gz'
     zg_filename = 'output/zip_group.csv.gz'
     session = boto3.session.Session(profile_name=args.profile_name) 
     s3_resource =  session.resource("s3")
-    bucket_name = 'ltm893-emr-spark-testing'
+    bucket_name = args.bucket_name
 
     delete_bucket_by_name(bucket_name,s3_resource )
     print("Making person objects")
