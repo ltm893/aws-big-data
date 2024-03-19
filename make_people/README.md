@@ -1,13 +1,15 @@
 ## Creates Random Test Data in S3 Bucket
 File: people.json.gz
-Format : [
+Format : 
+```javascript
+[
   {
     "name": "Lktn Oycjtgukk", #  random strings
     "usage": "933", # random number
     "zip": "57379" # random US zip cocd 
   },
 ]
-
+```
 File: zip_group.csv.gz
 Format: # random zip code, random number
 60629, 3
