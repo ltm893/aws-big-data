@@ -9,7 +9,9 @@ Format :
     "zip": "57379" # random US zip cocd 
   },
 ]
+'''
 
+'''javascript
 File: zip_group.csv.gz
 Format: # random zip code, random number
 60629, 3
@@ -17,6 +19,8 @@ Format: # random zip code, random number
 11368, 10
 90650, 1
 '''
+
+
 # Usage
 usage: create_objects.py [-h] --profile_name PROFILE_NAME --bucket_name BUCKET_NAME
 
