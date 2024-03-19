@@ -1,21 +1,28 @@
-## Creates Random Test Data in S3 Bucket
-File: people.json.gz
-Format : [
+# Creates Random Test Data in S3 Bucket
+File: people.json.gz  
+Format : 
+```javascript
+[
   {
     "name": "Lktn Oycjtgukk", #  random strings
     "usage": "933", # random number
     "zip": "57379" # random US zip cocd 
   },
 ]
+```
 
-File: zip_group.csv.gz
-Format: # random zip code, random number
-60629, 3
-79936, 8
-11368, 10
-90650, 1
+File: zip_group.csv.gz  
+Format: 
+|random zip code| random number|
+|---|---|
+|60629| 3|
+|79936| 8|
+|11368| 10|
+|90650| 1|
 
-# Usage
+
+
+## Usage
 usage: create_objects.py [-h] --profile_name PROFILE_NAME --bucket_name BUCKET_NAME
 
 options:
@@ -26,7 +33,7 @@ options:
                         Unique bucket. Will remove and recreate bucket
 (.venv) ltm893@River:make_people$
 
-# Testing
+## Testing
 Data Generation Tests are unit tested and marked local_unit
 AWS Calls are mock tested and marked aws_moto
 
