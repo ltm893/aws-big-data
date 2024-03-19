@@ -1,5 +1,5 @@
 # Creates Random Test Data in S3 Bucket
-File: people.json.gz
+File: people.json.gz  
 Format : 
 ```javascript
 [
@@ -11,7 +11,7 @@ Format :
 ]
 ```
 
-File: zip_group.csv.gz
+File: zip_group.csv.gz  
 Format: 
 |random zip code| random number|
 |---|---|
