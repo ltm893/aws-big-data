@@ -1,4 +1,4 @@
-## Creates Random Test Data in S3 Bucket
+# Creates Random Test Data in S3 Bucket
 File: people.json.gz
 Format : 
 ```javascript
@@ -22,7 +22,7 @@ Format:
 
 
 
-# Usage
+## Usage
 usage: create_objects.py [-h] --profile_name PROFILE_NAME --bucket_name BUCKET_NAME
 
 options:
@@ -33,7 +33,7 @@ options:
                         Unique bucket. Will remove and recreate bucket
 (.venv) ltm893@River:make_people$
 
-# Testing
+## Testing
 Data Generation Tests are unit tested and marked local_unit
 AWS Calls are mock tested and marked aws_moto
 
