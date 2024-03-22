@@ -121,6 +121,7 @@ if __name__ == '__main__':
     delete_bucket_by_name(bucket_name,s3_resource )
     print("Making person objects")
     make_person_json(people_filenname)
+    
     print("Making zip csv file")
     make_zip_csv(zg_filename)
     print("Creating bucket %s" % bucket_name)
