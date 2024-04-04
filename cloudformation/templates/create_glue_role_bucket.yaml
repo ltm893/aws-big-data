@@ -1,4 +1,17 @@
+Parameters:
+  BucketName:
+    Description: S3 Bucket name for demo files
+    Type: String
+    Default: ltm893-gluedemo
+
+
 Resources:
+  DemoGlueS3Bucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Ref BucketName
+
   DemoGlueServiceRole1:
     Type: AWS::IAM::Role
     Properties:
@@ -36,26 +49,11 @@ Resources:
               - s3:Abort*
             Effect: Allow
             Resource:
-              - Fn::GetAtt:
-                  - DemoGlueServiceS3Bucket
-                  - Arn
-              - Fn::Join:
-                  - ""
-                  - - Fn::GetAtt:
-                        - DemoGlueServiceS3Bucket
-                        - Arn
-                    - /*
+              - !Sub arn:aws:s3:::${BucketName}
+              - !Sub arn:aws:s3:::${BucketName}/*
         Version: "2012-10-17"
       PolicyName: DemoGlueServicePolicy1
       Roles:
         - Ref: DemoGlueServiceRole1
 
-
-  DemoGlueServiceS3Bucket:
-    Type: AWS::S3::Bucket
-    Properties:
-       BucketName: ltm893-demo-glueservice-bucket
-    UpdateReplacePolicy: Delete
-    DeletionPolicy: Delete
-    
  

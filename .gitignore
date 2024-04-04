@@ -2,6 +2,7 @@
 logs/
 #output dir
 output/
+testdata/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

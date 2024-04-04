@@ -8,7 +8,6 @@ from tempfile import NamedTemporaryFile
 from uszips import all_zips
 
 
-   
 
 @pytest.fixture
 def bucket_name():

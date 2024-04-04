@@ -1,0 +1,9 @@
+[tool.pytest.ini_options]
+pythonpath = [ '.', 'make_people' ]
+
+markers = [
+    "local_unit: marks tests local function unittests",
+    "aws_moto: marks tests as aws moto tests"
+]
+
+
