@@ -50,6 +50,7 @@ def make_person():
 
 def make_zip_csv(zg_filename):
     zip_group =  [[z,random.randrange(1,11)]  for z in all_zips ]
+    zip_group.insert(0,['zipcode','group'])
     np.savetxt(zg_filename, zip_group , delimiter =",",fmt ='% s')
    
 def make_person_json(people_filenname):

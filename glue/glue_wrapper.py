@@ -78,7 +78,8 @@ class GlueWrapper:
                 Role=role_arn,
                 DatabaseName=db_name,
                 TablePrefix=db_prefix,
-                Targets={"S3Targets": [{"Path": s3_target}]},
+                #Targets={"S3Targets": [{"Path": s3_target}]},
+                Targets={"S3Targets": [{"Path": s3_target,'Exclusions':['job_scripts/*', 'output/*'] }]},
             )
         except ClientError as err:
             logger.error(

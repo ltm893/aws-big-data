@@ -16,7 +16,7 @@ Shows how to use the AWS SDK for Python (Boto3) with AWS Glue to:
 4. List information about job runs and view some of the transformed data.
 5. Delete all resources created by the example.
 """
-
+import timeit
 import argparse
 import io
 import json
@@ -73,20 +73,7 @@ class GlueCrawler:
                 time.sleep(1 / tick)
             waited += 1
 
-    def upload_job_script(self, job_script):
-        """
-        Uploads a Python ETL script to an S3 bucket. The script is used by the AWS Glue
-        job to transform data.
-
-        :param job_script: The relative path to the job script.
-        """
-        try:
-            self.glue_bucket.upload_file(Filename=job_script, Key=job_script)
-            print(f"Uploaded job script '{job_script}' to the example bucket.")
-        except S3UploadFailedError as err:
-            logger.error("Couldn't upload job script. Here's why: %s", err)
-            raise
-
+   
     def run(self, crawler_name, db_name, db_prefix, data_source, job_script, job_name):
         """
         Runs the scenario. This is an interactive experience that runs at a command
@@ -104,10 +91,11 @@ class GlueCrawler:
         :param job_name: The name to give the job definition that is created during the
                          scenario.
         """
-        print("run called")
+        
         wrapper = GlueWrapper(self.glue_client)
         print(f"Checking for crawler {crawler_name}.")
         crawler = wrapper.get_crawler(crawler_name)
+        
         if crawler is None:
             print(f"Creating crawler {crawler_name}.")
             wrapper.create_crawler(
@@ -119,20 +107,18 @@ class GlueCrawler:
             )
             print(f"Created crawler {crawler_name}.")
             crawler = wrapper.get_crawler(crawler_name)
+        else :
+            print("Found Crawler")
+
         pprint(crawler)
         print("-" * 88)
-
+        print('\n')
         print(
-            f"When you run the crawler, it crawls data stored in {data_source} and "
-            f"creates a metadata database in the AWS Glue Data Catalog that describes "
-            f"the data in the data source."
+            f"When you run the crawler, it crawls data stored in {data_source} "
+            "excluding prefixes output and job_scripts and creates a metadata database "
+            "in the AWS Glue Data Catalog that describes the data in the data source."
         )
-        print("In this example, the source data is in CSV format.")
-        ready = False
-        while not ready:
-            ready = Question.ask_question(
-                "Ready to start the crawler? (y/n) ", Question.is_yesno
-            )
+        self.wait(10)
         wrapper.start_crawler(crawler_name)
         print("Let's wait for the crawler to run. This typically takes a few minutes.")
         crawler_state = None
@@ -141,58 +127,47 @@ class GlueCrawler:
             crawler = wrapper.get_crawler(crawler_name)
             crawler_state = crawler["State"]
             print(f"Crawler is {crawler['State']}.")
-        print("-" * 88)
-
+    
+        
         database = wrapper.get_database(db_name)
-        print(f"The crawler created database {db_name}:")
+        print(f"The crawler database is {db_name}:")
         pprint(database)
         print(f"The database contains these tables:")
         tables = wrapper.get_tables(db_name)
         for index, table in enumerate(tables):
             print(f"\t{index + 1}. {table['Name']}")
-        table_index = Question.ask_question(
-            f"Enter the number of a table to see more detail: ",
-            Question.is_int,
-            Question.in_range(1, len(tables)),
-        )
-        pprint(tables[table_index - 1])
-        print("-" * 88)
-
-        ''' 
-
+       
+        print('\n')
         print(f"Creating job definition {job_name}.")
         wrapper.create_job(
             job_name,
-            "Getting started example job.",
+            "Person Zip Join Demo.",
             self.glue_service_role.arn,
-            f"s3://{self.glue_bucket.name}/{job_script}",
+           job_script,
         )
+        print('\n')
         print("Created job definition.")
+        print('\n')
         print(
-            f"When you run the job, it extracts data from {data_source}, transforms it "
+            f"When you run the job, it extracts data from {data_source}, joins it "
             f"by using the {job_script} script, and loads the output into "
-            f"S3 bucket {self.glue_bucket.name}."
+            f"S3 bucket {self.glue_bucket.name}/output"
         )
-        print(
-            "In this example, the data is transformed from CSV to JSON, and only a few "
-            "fields are included in the output."
-        )
+       
         job_run_status = None
-        if Question.ask_question(f"Ready to run? (y/n) ", Question.is_yesno):
-            job_run_id = wrapper.start_job_run(
-                job_name, db_name, tables[0]["Name"], self.glue_bucket.name
-            )
-            print(f"Job {job_name} started. Let's wait for it to run.")
-            while job_run_status not in ["SUCCEEDED", "STOPPED", "FAILED", "TIMEOUT"]:
-                self.wait(10)
-                job_run = wrapper.get_job_run(job_name, job_run_id)
-                job_run_status = job_run["JobRunState"]
-                print(f"Job {job_name}/{job_run_id} is {job_run_status}.")
-        print("-" * 88)
+        job_run_id = wrapper.start_job_run(job_name, db_name, tables[0]["Name"], self.glue_bucket.name)
+        print(f"Job {job_name} started. Let's wait for it to run.")
+
+        while job_run_status not in ["SUCCEEDED", "STOPPED", "FAILED", "TIMEOUT"]:
+            self.wait(10)
+            job_run = wrapper.get_job_run(job_name, job_run_id)
+            job_run_status = job_run["JobRunState"]
+            print(f"Job {job_name}/{job_run_id} is {job_run_status}.")
+
 
         if job_run_status == "SUCCEEDED":
             print(
-                f"Data from your job run is stored in your S3 bucket '{self.glue_bucket.name}':"
+                f"Data from your job run is stored in your S3 bucket '{self.glue_bucket.name}'/output:"
             )
             try:
                 keys = [
@@ -282,7 +257,7 @@ class GlueCrawler:
             print(f"Deleted crawler {crawler_name}.")
         print("-" * 88)
 
-        '''
+    
 
 
 
