@@ -15,6 +15,10 @@ from glue.crawler import *
 
 from glue.question import Question
 
+today = date.today()
+DATE_STRING = today.strftime("%Y%m%d")
+DEMO_TYPE = 'gluedemo'
+
 logger = logging.getLogger(__name__)
 #logging.basicConfig(filename=f'logs/{__name__}.log', level=logging.INFO,
  #                   format='%(asctime)s %(message)s', datefmt='%Y-%m-%dT%H:%M:%S%z')
@@ -35,53 +39,40 @@ logger.setLevel(logging.INFO)
 
 
 class GlueDemo(): 
-   
-    demo_type = 'gluedemo'
-
     def __init__(self, base_name):
-        self.name = f'{base_name}-{self.demo_type}'
-        self.date_string = self.make_datestring()
-       
-        self.cf_stack_name = f'{self.name}-stack'
-        self.glue_db_name = f'{base_name}-{self.demo_type}-database'
+        self.name = f'{base_name}-{DEMO_TYPE}'
+        self.stack_name = f'{self.name}-stack'
+        self.stack_template = os.path.join(os.getcwd(), "cloudformation","templates","create_glue_role_bucket.yaml")
+        self.glue_db_name = f'{base_name}-{DEMO_TYPE}-database'
+        self.bucket_name  = f'{DEMO_TYPE}-{DATE_STRING}-{base_name}-{GlueDemo.__make_rs(6)}'
 
-        self.bucket_name = f'{self.demo_type}-{self.date_string}-{base_name}-{self.make_rs(6)}'
         self.bucket_uri = f's3://{self.bucket_name}'
         self.bucket_output_uri = f'{self.bucket_uri}/output'
-        self.bucket_output_dated_uri = f'{self.bucket_output_uri}/{self.date_string}'
+        self.bucket_output_dated_uri = f'{self.bucket_output_uri}/{DATE_STRING}'
         self.glue_run_job_path = os.path.join('glue','job_scripts')
         self.glue_run_script = 'person_zip_join_to_parquet.py'
         self.s3_job_prefix   = f'{self.bucket_uri}/script'
         self.test_data_dir = os.path.join(os.getcwd(), "testdata")
         self.person_test_file = f'{self.test_data_dir}/people.json.gz' 
         self.zip_test_file = f'{self.test_data_dir}/zip_group.csv.gz'
+
  
-    def get_basename_from_user() : 
-        valid_name = False 
-        details_map = {}
-        while valid_name is False :
-            base_name = input("Please enter an alpha numeric friendly name less than 20 characters for base name: ")
-            if base_name.isalnum() and len(base_name) <= 20 :
-                return GlueDemo(base_name)
-                # create_stack = input('Creating stack with above these details y/n: ')
-                if (create_stack == 'y'):
-                    valid_name = True
-            else :
-                print(base_name, 'base name not valid')
-        
-
-    @staticmethod
-    def make_datestring():
-        today = date.today()
-        return  today.strftime("%Y%m%d")
-
-    @staticmethod
-    def make_rs(num):
+    def __make_rs(num):
         chars = string.ascii_lowercase + string.digits
         return ''.join(random.choice(chars) for _ in range(num) )
 
-    
-  
+
+def make_demo_config_from_user() :  
+    while True :
+        base_name = input("Please enter an alpha numeric friendly name less than 20 characters for base name: ")
+        if base_name.isalnum() and len(base_name) <= 20 :
+            config = GlueDemo(base_name)
+            pprint(config.__dict__)
+            create_stack = input('Creating stack with above these details y/n: ')
+            if (create_stack == 'y'):
+                return config
+        else :
+            print(base_name, 'base name not valid')
 
 
 if __name__ == '__main__':
@@ -100,18 +91,22 @@ if __name__ == '__main__':
     args = parser.parse_args()
     try:
         if args.action == "deploy":
-            glue_demo = GlueDemo.get_basename_from_user()
-            pprint(glue_demo.__dict__)
-          
-            ''' 
-            cf_template = os.path.join(os.getcwd(), "cloudformation","templates","create_glue_role_bucket.yaml")
-            create_stack(cf_client,stack_name,cf_template)
+            config = make_demo_config_from_user()
+            # create_stack(cf_client,config.stack_name,config.stack_template)  
+            create_stack(cf_client,
+                Capabilities=['CAPABILITY_NAMED_IAM'], StackName=config.stack_name, 
+                TemplateBody=config.stack_template, Parameters=[{ 'ParameterKey': 'BucketName', 'ParameterValue': config.bucket_name}] )
+            # bucket = s3_resource.Bucket(config.bucket_name)    
+            # create_stack(cf_client,stack_name,cf_template)
+
+            '''
             [ people_filenname, zg_filename ] = setup_outfiles()
             print("Making person objects")
             make_person_json(people_filenname)
 
-            bucket = s3_resource.Bucket(bucket_name)
+            
 
+           
             print("Uploading %s to s3://%s" % (people_filenname , bucket_name))
             upload_to_bucket(bucket,people_filenname,'json/test_people.json.gz', s3_resource)
 

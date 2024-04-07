@@ -8,27 +8,31 @@ import os
 import argparse
 
 stack_arn = ''
-def create_stack(cf_client,stack_name,cf_template):
-    #aws cloudformation create-stack 
+
+''' 
+with open('batch-job-cft.yml', 'r') as cf_file:
+    cft_template = cf_file.read()
+    cf_client.create_stack(StackName='Batch Job', TemplateBody=cft_template)
+'''
+
+def create_stack (cf_client, **kwargs ):
+    print(kwargs['TemplateBody'])
+    with open( kwargs['TemplateBody'],'r') as cf_file:
+        kwargs['TemplateBody'] = cf_file.read()
+   #stack_kwargs = {k: v for k, v in kwargs.items() if v is not None}
    
-    cf_template = open(cf_template).read()
-    response = cf_client.create_stack(
-                    Capabilities=['CAPABILITY_NAMED_IAM'], 
-                    StackName=stack_name, 
-                    TemplateBody=cf_template,
-                    Tags=[
-                        {'Key': 'EnvironmentName','Value': 'dev'}
-                    ]
-                )
+         #aws cloudformation create-stack 
+   
+    response = cf_client.create_stack(**kwargs)       
 
     stack_arn = response['StackId']
 
     
     waiter = cf_client.get_waiter('stack_create_complete')
-    print('Starting Stack Wait for:', stack_name)
+    print('Starting Stack Wait for:', kwargs['StackName'])
     print('StackId:', stack_arn)
     waiter.wait(
-        StackName=stack_name,
+        StackName=kwargs['StackName'],
         WaiterConfig={
             'Delay': 30,
             'MaxAttempts': 10
@@ -53,6 +57,10 @@ def delete_stack(cf_client,stack_name):
 
 
 if __name__ == '__main__' :
+    create_stack_2('client',
+        Capabilities=['CAPABILITY_NAMED_IAM'], StackName='stack_name', TemplateBody='cf_template', Parameters=[{ 'ParameterKey': 'bucketName', 'ParameterValue': 'joejoen'}] )
+
+    ''' 
    
     script_name = os.path.basename(__file__)
     logger = logging.getLogger(__name__)
@@ -85,4 +93,4 @@ if __name__ == '__main__' :
         print(f'Deleting  {stack_name}') 
         delete_stack(cf_client,stack_name)   
 
-
+'''
