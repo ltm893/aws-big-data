@@ -71,7 +71,6 @@ class GlueWrapper:
         :param s3_target: The URL to an S3 bucket that contains data that is
                           the target of the crawler.
         """
-        print("create_crawler_called")
         try:
             self.glue_client.create_crawler(
                 Name=name,
@@ -134,6 +133,22 @@ class GlueWrapper:
             return response["Database"]
 
     # snippet-end:[python.example_code.glue.GetDatabase]
+
+    def create_partition(self,**kargs):
+        
+        try:
+            response = self.glue_client.create_partitions(**kargs)
+        except ClientError as err:
+            logger.error(
+                "Couldn't create partition %s. Here's why: %s: %s",
+                'filler',
+                err.response["Error"]["Code"],
+                err.response["Error"]["Message"]
+            )
+            raise
+        else:
+            return response
+   
 
     # snippet-start:[python.example_code.glue.GetTables]
     def get_tables(self, db_name):

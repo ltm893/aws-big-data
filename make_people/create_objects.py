@@ -105,6 +105,21 @@ def delete_bucket_by_name(bucket_name,s3_resource):
         logger.exception(f'Couldn\'t remove bucket {bucket_name}')
         raise
 
+def empty_bucket(bucket_name,s3_resource):
+    try:
+        bucket = s3_resource.Bucket(bucket_name)
+        if bucket.creation_date:
+            print("%s exists" % bucket_name)
+        else:
+            print("%s does not exist" % bucket_name)
+            return
+        bucket.objects.delete()
+        logger.info("Emptied  %s.", bucket.name)
+        print(f"Emptied bucket {bucket_name}")
+    except ClientError:
+        logger.exception(f'Couldn\'t empty bucket {bucket_name}')
+        raise
+
 
 
 

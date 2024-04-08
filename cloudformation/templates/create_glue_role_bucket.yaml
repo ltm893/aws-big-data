@@ -12,6 +12,7 @@ Resources:
     Properties:
       BucketName: !Ref BucketName
 
+
   DemoGlueServiceRole1:
     Type: AWS::IAM::Role
     Properties:
