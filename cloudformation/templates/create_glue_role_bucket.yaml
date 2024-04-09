@@ -4,6 +4,11 @@ Parameters:
     Type: String
     Default: ltm893-gluedemo
 
+  GlueRole:
+    Description: Role for Glue
+    Type: String
+    Default: DemoGlueServiceRole1
+
 
 Resources:
   DemoGlueS3Bucket:
@@ -29,7 +34,7 @@ Resources:
             - - "arn:"
               - Ref: AWS::Partition
               - :iam::aws:policy/service-role/AWSGlueServiceRole
-      RoleName: DemoGlueServiceRole1
+      RoleName: !Ref GlueRole
     
 
   DemoGlueServicePolicy1:
@@ -55,6 +60,6 @@ Resources:
         Version: "2012-10-17"
       PolicyName: DemoGlueServicePolicy1
       Roles:
-        - Ref: DemoGlueServiceRole1
+        - Ref: !Reg GlueRole
 
  

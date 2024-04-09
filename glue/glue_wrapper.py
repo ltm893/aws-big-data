@@ -78,7 +78,7 @@ class GlueWrapper:
                 DatabaseName=db_name,
                 TablePrefix=db_prefix,
                 #Targets={"S3Targets": [{"Path": s3_target}]},
-                Targets={"S3Targets": [{"Path": s3_target,'Exclusions':['job_scripts/*', 'output/*'] }]},
+                Targets={"S3Targets": [{"Path": s3_target,'Exclusions':[s3_target + '/job_scripts/', s3_target + '/output/'] }]},
             )
         except ClientError as err:
             logger.error(
@@ -134,20 +134,6 @@ class GlueWrapper:
 
     # snippet-end:[python.example_code.glue.GetDatabase]
 
-    def create_partition(self,**kargs):
-        
-        try:
-            response = self.glue_client.create_partitions(**kargs)
-        except ClientError as err:
-            logger.error(
-                "Couldn't create partition %s. Here's why: %s: %s",
-                'filler',
-                err.response["Error"]["Code"],
-                err.response["Error"]["Message"]
-            )
-            raise
-        else:
-            return response
    
 
     # snippet-start:[python.example_code.glue.GetTables]
@@ -211,7 +197,7 @@ class GlueWrapper:
     # snippet-end:[python.example_code.glue.CreateJob]
 
     # snippet-start:[python.example_code.glue.StartJobRun]
-    def start_job_run(self, name, input_database, input_table, output_bucket_name):
+    def start_job_run(self, name, input_database, input_json_table, input_csv_table, output_bucket_name):
         """
         Starts a job run. A job run extracts data from the source, transforms it,
         and loads it to the output bucket.
@@ -232,7 +218,8 @@ class GlueWrapper:
                 JobName=name,
                 Arguments={
                     "--input_database": input_database,
-                    "--input_table": input_table,
+                    "--input_json_table": input_json_table,
+                    "--input_csv_table": input_csv_table,
                     "--output_bucket_url": f"s3://{output_bucket_name}/",
                 },
             )
