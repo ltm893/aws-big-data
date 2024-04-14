@@ -60,6 +60,6 @@ Resources:
         Version: "2012-10-17"
       PolicyName: DemoGlueServicePolicy1
       Roles:
-        - Ref: !Reg GlueRole
+        - !Ref DemoGlueServiceRole1
 
  

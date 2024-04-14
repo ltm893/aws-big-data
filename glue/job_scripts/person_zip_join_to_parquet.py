@@ -34,7 +34,8 @@ zip_group = glueContext.create_dynamic_frame.from_catalog(
             database=args["input_database"],
             table_name=args["input_csv_table"])
 
-person_zip = Join.apply(persons,zip_group,'zip','zipcode').drop_fields(['zipcode'])				   				   
+person_zip = Join.apply(persons,zip_group,'zip','zipcode').drop_fields(['zipcode'])
+	   				   
 
 
 glueContext.write_dynamic_frame.from_options(frame =person_zip,

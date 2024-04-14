@@ -1,5 +1,5 @@
 [tool.pytest.ini_options]
-pythonpath = [ '.', 'make_people' ]
+pythonpath = [ '.','glue' ]
 
 markers = [
     "local_unit: marks tests local function unittests",

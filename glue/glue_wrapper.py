@@ -55,7 +55,7 @@ class GlueWrapper:
     # snippet-end:[python.example_code.glue.GetCrawler]
 
     # snippet-start:[python.example_code.glue.CreateCrawler]
-    def create_crawler(self, name, role_arn, db_name, db_prefix, s3_target):
+    def create_crawler(self, name, role_arn, db_name, db_prefix, s3_target, exclusions):
         """
         Creates a crawler that can crawl the specified target and populate a
         database in your AWS Glue Data Catalog with metadata that describes the data
@@ -77,8 +77,7 @@ class GlueWrapper:
                 Role=role_arn,
                 DatabaseName=db_name,
                 TablePrefix=db_prefix,
-                #Targets={"S3Targets": [{"Path": s3_target}]},
-                Targets={"S3Targets": [{"Path": s3_target,'Exclusions':[s3_target + '/job_scripts/', s3_target + '/output/'] }]},
+                Targets={"S3Targets": [{"Path": s3_target,'Exclusions': exclusions }]}
             )
         except ClientError as err:
             logger.error(
@@ -119,18 +118,23 @@ class GlueWrapper:
         :param name: The name of the database to look up.
         :return: Information about the database.
         """
+        database = None
         try:
             response = self.glue_client.get_database(Name=name)
+            database = response["Database"]
         except ClientError as err:
-            logger.error(
-                "Couldn't get database %s. Here's why: %s: %s",
-                name,
-                err.response["Error"]["Code"],
-                err.response["Error"]["Message"],
-            )
-            raise
-        else:
-            return response["Database"]
+            if err.response["Error"]["Code"] == "EntityNotFoundException":
+                logger.info("Crawler %s doesn't exist.", name)
+            else :
+                logger.error(
+                    "Couldn't get database %s. Here's why: %s: %s",
+                    name,
+                    err.response["Error"]["Code"],
+                    err.response["Error"]["Message"],
+                )
+                raise
+        
+        return database 
 
     # snippet-end:[python.example_code.glue.GetDatabase]
 
@@ -303,6 +307,34 @@ class GlueWrapper:
             raise
         else:
             return response["JobRun"]
+
+    # snippet-end:[python.example_code.glue.GetJobRun]
+
+    # snippet-start:[python.example_code.glue.GetJobRun]
+    def get_job(self, name):
+        """
+        Gets information about a single job run.
+
+        :param name: The name of the job definition for the run.
+      
+        :return: Information about the run.
+        """
+        job = None
+        try:
+            response = self.glue_client.get_job(JobName=name)
+            job = response["Job"]
+        except ClientError as err:
+            if err.response["Error"]["Code"] == "EntityNotFoundException":
+                logger.info("Job %s doesn't exist.", name)
+            else :
+                logger.error(
+                    "Couldn't get job %s/%s. Here's why: %s: %s",
+                    name,
+                    err.response["Error"]["Code"],
+                    err.response["Error"]["Message"],
+                )
+                raise
+        return job
 
     # snippet-end:[python.example_code.glue.GetJobRun]
 

@@ -1,14 +1,15 @@
 import numpy as np
 import gzip
-import boto3
 from botocore.exceptions import ClientError
 import logging
-import json
 import random
 import string
-from .uszips import all_zips
-import os
+
 import jsonlines
+
+from uszips import all_zips
+
+
 
 #import timeit
 logger = logging.getLogger(__name__)
