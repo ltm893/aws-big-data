@@ -4,6 +4,7 @@ from botocore.exceptions import ClientError
 import logging
 import random
 import string
+import os
 
 import jsonlines
 
@@ -57,7 +58,7 @@ def make_zip_csv(zg_filename):
 def make_person_json(people_filenname):
     with gzip.open(people_filenname, 'wb') as fp:
         json_writer = jsonlines.Writer(fp)
-        json_writer.write_all( [make_person()  for i in range(1,100) ])
+        json_writer.write_all( [make_person()  for i in range(1,1000000) ])
 
 
     
@@ -120,6 +121,12 @@ def empty_bucket(bucket_name,s3_resource):
     except ClientError:
         logger.exception(f'Couldn\'t empty bucket {bucket_name}')
         raise
+
+def check_create_testdata_dir():
+    testdata = os.path.join(os.getcwd(), "testdata")
+    if not os.path.exists(testdata): 
+        os.makedirs(testdata) 
+
 
 
 

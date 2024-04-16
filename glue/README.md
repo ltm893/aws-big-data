@@ -6,6 +6,23 @@
 * https://docs.aws.amazon.com/glue/latest/dg/notebook-getting-started.html
 
 
+
+## Clone and install in its own venv
+git clone git@github.com:ltm893/aws-big-data.git
+Cloning into 'aws-big-data'...
+remote: Enumerating objects: 230, done.
+remote: Counting objects: 100% (230/230), done.
+remote: Compressing objects: 100% (163/163), done.
+remote: Total 230 (delta 112), reused 172 (delta 60), pack-reused 0
+Receiving objects: 100% (230/230), 85.67 KiB | 1.82 MiB/s, done.
+Resolving deltas: 100% (112/112), done.
+ltm893@River:~$ cd aws-big-data/
+ltm893@River:~/aws-big-data$ python3 -m venv .venv
+ltm893@River:~/aws-big-data$ source .venv/bin/activate
+(.venv) ltm893@River:~/aws-big-data$ pip install -r requirements.txt
+(.venv) ltm893@River:~/aws-big-data$ cd glue/
+(.venv) ltm893@River:~/aws-big-data/glue$ python run_glue_demo.py deploy
+
 ## Test Data
 File: people.json.gz  
 Format : 

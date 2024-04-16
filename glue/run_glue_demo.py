@@ -12,7 +12,7 @@ import string
 import io
 from pprint import pprint
 from cf_wrapper import CloudFormationWrapper
-from create_test_data import make_person_json, make_zip_csv, upload_to_bucket, empty_bucket
+from create_test_data import make_person_json, make_zip_csv, upload_to_bucket, empty_bucket, check_create_testdata_dir
 from glue_wrapper import GlueWrapper
 
 
@@ -135,6 +135,8 @@ class GlueDemo():
             TemplateBody=self.stack_template, Parameters=[{ 'ParameterKey': 'BucketName', 'ParameterValue': self.bucket_name},
                                                           {'ParameterKey': 'GlueRole', 'ParameterValue': self.role_name} ] )
         
+        check_create_testdata_dir()
+
         print("Making person objects")
         make_person_json(self.person_test_file)
 
@@ -300,6 +302,7 @@ def parse_args(args):
         "crawler, runs crawler on existing componets"
     )
     return parser.parse_args(args)
+
 
 def main():
     args = parse_args(sys.argv[1:])
