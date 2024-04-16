@@ -1,14 +1,14 @@
-#import create_objects
-from create_objects import make_random_string, make_random_digit_string, upload_to_bucket, create_bucket, delete_bucket_by_name
+
+from create_test_data import make_random_string, make_random_digit_string, upload_to_bucket, create_bucket, delete_bucket_by_name
 import pytest
-import boto3
+#import boto3
 from boto3.s3.transfer import S3UploadFailedError
 from botocore.exceptions import ClientError
 from tempfile import NamedTemporaryFile
 from uszips import all_zips
 
 
-   
+
 
 @pytest.fixture
 def bucket_name():

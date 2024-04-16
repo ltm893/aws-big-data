@@ -1,21 +1,19 @@
 import numpy as np
 import gzip
-import boto3
 from botocore.exceptions import ClientError
 import logging
-import json
 import random
 import string
+
+import jsonlines
+
 from uszips import all_zips
-import argparse
+
+
 
 #import timeit
-
-
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename=f'logs/{__name__}.log', level=logging.INFO,
-                    format='%(asctime)s %(message)s', datefmt='%Y-%m-%dT%H:%M:%S%z')
-logger.info('Beginging run')
+
 
 def make_random_string(max_length):
     if max_length < 3 :
@@ -48,16 +46,21 @@ def make_person():
     person['usage'] =  make_random_digit_string(6)
     person['zip']  = get_random_zip()
     return person
+    
+    
 
 def make_zip_csv(zg_filename):
     zip_group =  [[z,random.randrange(1,11)]  for z in all_zips ]
-    np.savetxt(zg_filename, zip_group , delimiter =", ",fmt ='% s')
+    zip_group.insert(0,['zipcode','group'])
+    np.savetxt(zg_filename, zip_group , delimiter =",",fmt ='% s')
    
 def make_person_json(people_filenname):
-    test_objects = [make_person() for i in range(1,1000000) ]
-    with gzip.open(people_filenname, 'wt') as f:
-        f.write(json.dumps(test_objects))
+    with gzip.open(people_filenname, 'wb') as fp:
+        json_writer = jsonlines.Writer(fp)
+        json_writer.write_all( [make_person()  for i in range(1,100) ])
 
+
+    
 
 def create_bucket(bucket_name,s3_resource):
     try:
@@ -103,32 +106,22 @@ def delete_bucket_by_name(bucket_name,s3_resource):
         logger.exception(f'Couldn\'t remove bucket {bucket_name}')
         raise
 
-if __name__ == '__main__':
-                
+def empty_bucket(bucket_name,s3_resource):
+    try:
+        bucket = s3_resource.Bucket(bucket_name)
+        if bucket.creation_date:
+            print("%s exists" % bucket_name)
+        else:
+            print("%s does not exist" % bucket_name)
+            return
+        bucket.objects.delete()
+        logger.info("Emptied  %s.", bucket.name)
+        print(f"Emptied bucket {bucket_name}")
+    except ClientError:
+        logger.exception(f'Couldn\'t empty bucket {bucket_name}')
+        raise
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--profile_name', type=str, required=True, help='AWS authenticated profile')
-    parser.add_argument('--bucket_name', type=str, required=True, help='Unique bucket. Will remove and recreate bucket')
-    args = parser.parse_args()
-    #print(args)
 
-    people_filenname = 'output/people.json.gz'
-    zg_filename = 'output/zip_group.csv.gz'
-    session = boto3.session.Session(profile_name=args.profile_name) 
-    s3_resource =  session.resource("s3")
-    bucket_name = args.bucket_name
-
-    delete_bucket_by_name(bucket_name,s3_resource )
-    print("Making person objects")
-    make_person_json(people_filenname)
-    print("Making zip csv file")
-    make_zip_csv(zg_filename)
-    print("Creating bucket %s" % bucket_name)
-    bucket = create_bucket(bucket_name,s3_resource)
-    print("Uploading %s to s3://%s" % (people_filenname , bucket_name))
-    upload_to_bucket(bucket,people_filenname,'test_people.json.gz', s3_resource)
-    print("Uploading %s to s3://%s" % (zg_filename, bucket_name) )
-    upload_to_bucket(bucket,zg_filename ,'test_zip_group.gz', s3_resource)
 
 
 
