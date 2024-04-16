@@ -38,14 +38,14 @@ class GlueStubber(ExampleStubber):
         )
 
     def stub_create_crawler(
-        self, crawler_name, role_arn, db_name, db_prefix, s3_target, error_code=None
+        self, crawler_name, role_arn, db_name, db_prefix, s3_target, exclusions, error_code=None
     ):
         expected_params = {
             "Name": crawler_name,
             "Role": role_arn,
             "DatabaseName": db_name,
             "TablePrefix": db_prefix,
-            "Targets": {"S3Targets": [{"Path": s3_target}]},
+            "Targets": {"S3Targets": [{"Path": s3_target, 'Exclusions': exclusions }]},
         }
         response = {}
         self._stub_bifurcator(

@@ -57,7 +57,7 @@ def make_zip_csv(zg_filename):
 def make_person_json(people_filenname):
     with gzip.open(people_filenname, 'wb') as fp:
         json_writer = jsonlines.Writer(fp)
-        json_writer.write_all( [make_person()  for i in range(1,1000000) ])
+        json_writer.write_all( [make_person()  for i in range(1,100) ])
 
 
     

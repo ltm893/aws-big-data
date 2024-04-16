@@ -32,9 +32,10 @@ logger.setLevel(logging.INFO)
 class GlueDemo(): 
     
 
-    def __init__(self, cf_client,s3_resource,glue_client):
+    def __init__(self, cf_client,s3_resource,glue_client,iam_resource):
         self.glue_client = glue_client
         self.s3_resource = s3_resource
+        self.iam_resource = iam_resource
         self.cf_wrapper = CloudFormationWrapper(cf_client)
         self.glue_wrapper = GlueWrapper(glue_client)    
 
@@ -79,7 +80,7 @@ class GlueDemo():
         if type == 'new':
             input_message = 'Enter a friendly alpha numeric name less than 20 characters: '
         if type == 'existing':
-             input_message = 'Enter friendly name: used in deploy phase' 
+             input_message = 'Enter friendly name: used in deploy phase: ' 
         while True :
             
             base_name = input(input_message)
@@ -93,9 +94,8 @@ class GlueDemo():
                         GlueDemo.__deploy_bucket_role_stack(self)
                     else :
                         continue
-                iam_role = boto3.resource("iam").Role(self.role_name)
 
-                self.iam_role_arn = iam_role.arn
+                self.iam_role_arn = self.iam_resource.Role(self.role_name).arn
                 return
             else :
                 print(base_name, 'base name not valid')
@@ -289,7 +289,7 @@ def parse_args(args):
     :return: The parsed arguments.
     """
     parser = argparse.ArgumentParser(
-            description="Deploys S3 bucket, IAM role, creates Glue Crawler with testdata"
+            description="Deploys S3 bucket, IAM role, creates Glue Crawler with test data "
             "Crawler joins json data with csv and stores in a parquet format in output prefix",  formatter_class=RawTextHelpFormatter
         )
     parser.add_argument(
@@ -297,18 +297,18 @@ def parse_args(args):
         choices=["deploy", "destroy", "crawler"],
         help="deploy, creates componets named based on user supplied friendly name  \n"
         "destroy, removes existing componets based on user supplied friendly name \n"
-        "crawler, reruns crawling on existing componets"
+        "crawler, runs crawler on existing componets"
     )
     return parser.parse_args(args)
 
-
-if __name__ == '__main__':
-
+def main():
     args = parse_args(sys.argv[1:])
  
     gluedemo = GlueDemo(boto3.client("cloudformation"),
                         boto3.resource("s3"),
-                        boto3.client("glue"))
+                        boto3.client("glue"),
+                        boto3.resource("iam")
+    )
 
     if args.action == "deploy":
         gluedemo.get_user_base_name_for_config('new')
@@ -325,5 +325,9 @@ if __name__ == '__main__':
         gluedemo.start_crawler()
         gluedemo.create_run_job()
         gluedemo.s3_data()
+
+if __name__ == '__main__':
+    main()
+    
 
    

@@ -1,4 +1,12 @@
-# Creates Random Test Data in S3 Bucket
+# Basic Boto3 Glue Crawler Demo
+* Cloud Formation Template: Creates S3 bucket and Role for Glue Service
+* Boto3:  Creates Glue crawler, database, tables and runs glue job to join json and csv data
+* Dervived from https://github.com/awsdocs/aws-doc-sdk-examples/tree/main/python
+* Jupyter notebook used for run job dev, from glue dir: jupyter notebook
+* https://docs.aws.amazon.com/glue/latest/dg/notebook-getting-started.html
+
+
+## Test Data
 File: people.json.gz  
 Format : 
 ```javascript
@@ -23,28 +31,52 @@ Format:
 
 
 ## Usage
-usage: create_objects.py [-h] --profile_name PROFILE_NAME --bucket_name BUCKET_NAME
+python run_glue_demo.py --help
+usage: run_glue_demo.py [-h] {deploy,destroy,crawler}
+
+Deploys S3 bucket, IAM role, creates Glue Crawler with test data Crawler joins json data with csv and stores in a parquet format in output prefix
+
+positional arguments:
+  {deploy,destroy,crawler}
+                        deploy, creates componets named based on user supplied friendly name
+                        destroy, removes existing componets based on user supplied friendly name
+                        crawler, runs crawler on existing componets
 
 options:
   -h, --help            show this help message and exit
-  --profile_name PROFILE_NAME
-                        AWS authenticated profile
-  --bucket_name BUCKET_NAME
-                        Unique bucket. Will remove and recreate bucket
-(.venv) ltm893@River:make_people$
+
 
 ## Testing
 Data Generation Tests are unit tested and marked local_unit
-AWS Calls are mock tested and marked aws_moto
+Data Generation AWS Calls are mock tested and marked aws_moto
+No AWS costs incur
 
-(.venv) ltm893@River:tests$ pytest 
-================================================= test session starts ==================================================
-platform linux -- Python 3.12.2, pytest-8.1.1, pluggy-1.4.0
-rootdir: /home/ltm893/projects/aws-big-data/make_people/tests
-configfile: pytest.ini
-collected 6 items
 
-test_create_objects.py ......                                                                                    [100%]
+pytest -m "not integ"
+========================================================= test session starts =========================================================
+platform linux -- Python 3.11.0, pytest-8.1.1, pluggy-1.4.0
+rootdir: /home/ltm893/projects/aws-big-data
+configfile: pyproject.toml
+plugins: anyio-4.3.0
+collected 7 items / 1 deselected / 6 selected
 
-================================================== 6 passed in 1.58s ===================================================
-(.venv) ltm893@River:tests$
+test/test_create_test_data.py ......                                                                                            [100%]
+
+=================================================== 6 passed, 1 deselected in 1.54s ===================================================
+
+
+---
+Integegration tests creates cloud formation stack, glue componets and runs crawler. Then removes everythying will incur AWS costs
+
+
+pytest -m "integ"
+========================================================= test session starts =========================================================
+platform linux -- Python 3.11.0, pytest-8.1.1, pluggy-1.4.0
+rootdir: /home/ltm893/projects/aws-big-data
+configfile: pyproject.toml
+plugins: anyio-4.3.0
+collected 7 items / 6 deselected / 1 selected
+
+test/test_integ_scenario.py .                                                                                                   [100%]
+
+============================================= 1 passed, 6 deselected in 332.95s (0:05:32) =============================================

@@ -3,7 +3,8 @@ pythonpath = [ '.','glue' ]
 
 markers = [
     "local_unit: marks tests local function unittests",
-    "aws_moto: marks tests as aws moto tests"
+    "aws_moto: marks tests as aws moto tests",
+    "integ: marks tests as integration"
 ]
 
 
