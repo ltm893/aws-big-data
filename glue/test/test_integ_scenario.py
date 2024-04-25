@@ -9,6 +9,7 @@ from unittest.mock import patch
 import boto3
 from botocore.exceptions import ClientError
 import pytest
+from common import *
 
 import run_glue_demo as run_gluedemo_script
 

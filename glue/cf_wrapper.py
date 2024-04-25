@@ -18,7 +18,8 @@ class CloudFormationWrapper():
             with open( kwargs['TemplateBody'],'r') as cf_file:
                 kwargs['TemplateBody'] = cf_file.read()
             #stack_kwargs = {k: v for k, v in kwargs.items() if v is not None}
-            response = self.cf_client.create_stack(**kwargs)       
+            response = self.cf_client.create_stack(**kwargs) 
+            print(response)      
             stack_arn = response['StackId']
 
             
@@ -40,6 +41,7 @@ class CloudFormationWrapper():
                     err.response["Error"]["Message"],
             )
             raise
+        return
 
     def delete_stack(self,stack_name):
         try: 
@@ -79,5 +81,12 @@ class CloudFormationWrapper():
 
 
 
-# if __name__ == '__main__' :
+if __name__ == '__main__' :
+    cf_wrapper = CloudFormationWrapper(boto3.client("cloudformation"))
+    response = cf_wrapper.create_stack(Capabilities=['CAPABILITY_NAMED_IAM'], StackName='myStack', 
+            TemplateBody='cloudformation/create_glue_role_bucket.yaml', Parameters=[{ 'ParameterKey': 'BucketName', 'ParameterValue': 'ltm893-selfcheck-234'},
+                                                          {'ParameterKey': 'GlueRole', 'ParameterValue':'DemoGlueServiceRole1'} ] )
+
+    print(response)
+        
  
