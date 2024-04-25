@@ -1,4 +1,4 @@
-# Basic Boto3 Glue Crawler Demo
+# Automated Basic Boto3 Glue Crawler Demo
 * Cloud Formation Template: Creates S3 bucket and Role for Glue Service
 * Boto3:  Creates Glue crawler, database, tables and runs glue job to join json and csv data
 * Dervived from https://github.com/awsdocs/aws-doc-sdk-examples/tree/main/python

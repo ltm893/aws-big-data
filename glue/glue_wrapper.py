@@ -55,7 +55,7 @@ class GlueWrapper:
     # snippet-end:[python.example_code.glue.GetCrawler]
 
     # snippet-start:[python.example_code.glue.CreateCrawler]
-    def create_crawler(self, name, role_arn, db_name, db_prefix, s3_target, exclusions):
+    def create_crawler(self, name, role_arn, db_name, db_prefix, s3_target,exclusions):
         """
         Creates a crawler that can crawl the specified target and populate a
         database in your AWS Glue Data Catalog with metadata that describes the data
@@ -77,7 +77,8 @@ class GlueWrapper:
                 Role=role_arn,
                 DatabaseName=db_name,
                 TablePrefix=db_prefix,
-                Targets={"S3Targets": [{"Path": s3_target,'Exclusions': exclusions }]}
+                # Targets={"S3Targets": [{"Path": s3_target}]}
+               Targets={"S3Targets": [{"Path": s3_target,'Exclusions': exclusions }]}
             )
         except ClientError as err:
             logger.error(
@@ -86,6 +87,7 @@ class GlueWrapper:
                 err.response["Error"]["Message"],
             )
             raise
+        
 
     # snippet-end:[python.example_code.glue.CreateCrawler]
 

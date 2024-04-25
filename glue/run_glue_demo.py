@@ -36,7 +36,7 @@ class GlueDemo():
         self.glue_client = glue_client
         self.s3_resource = s3_resource
         self.iam_resource = iam_resource
-        self.cf_wrapper = CloudFormationWrapper(cf_client)
+        self.cf_client = cf_client
         self.glue_wrapper = GlueWrapper(glue_client)    
 
 
@@ -91,7 +91,7 @@ class GlueDemo():
                 if(type == 'new'):
                     create_stack = input('Start Glue Demo with above details?  y/n: ')
                     if (create_stack == 'y'):
-                        GlueDemo.__deploy_bucket_role_stack(self)
+                        self.deploy_bucket_role_stack()
                     else :
                         continue
 
@@ -127,11 +127,12 @@ class GlueDemo():
                     return res['PhysicalResourceId'] 
         return stack_response
 
-    def __deploy_bucket_role_stack(self):
+    def deploy_bucket_role_stack(self):
         
         s3_resource = self.s3_resource
 
-        self.cf_wrapper.create_stack(Capabilities=['CAPABILITY_NAMED_IAM'], StackName=self.stack_name, 
+        cf_wrapper =CloudFormationWrapper(self.cf_client) 
+        cf_wrapper.create_stack(Capabilities=['CAPABILITY_NAMED_IAM'], StackName=self.stack_name, 
             TemplateBody=self.stack_template, Parameters=[{ 'ParameterKey': 'BucketName', 'ParameterValue': self.bucket_name},
                                                           {'ParameterKey': 'GlueRole', 'ParameterValue': self.role_name} ] )
         
