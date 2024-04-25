@@ -120,7 +120,8 @@ class GlueDemo():
             waited += 1
 
     def __get_bucket_name_from_stack_name(self,stack_name):
-        stack_response = self.cf_wrapper.list_stack_resources(StackName=stack_name)
+        cf_wrapper =CloudFormationWrapper(self.cf_client) 
+        stack_response = cf_wrapper.list_stack_resources(StackName=stack_name)
         if 'StackResourceSummaries' in stack_response:
             for res in stack_response['StackResourceSummaries']:
                 if res['LogicalResourceId'] == 'DemoGlueS3Bucket' :
@@ -158,7 +159,8 @@ class GlueDemo():
         s3_resource = self.s3_resource
         wrapper = self.glue_wrapper
         stack_name = self.stack_name
-        stack_response = self.cf_wrapper.list_stack_resources(StackName=stack_name)
+        cf_wrapper =CloudFormationWrapper(self.cf_client) 
+        stack_response = cf_wrapper.list_stack_resources(StackName=stack_name)
         if 'StackResourceSummaries' in stack_response:
             print()
             print("All Resource below will be deleted")
@@ -181,7 +183,7 @@ class GlueDemo():
             if user_del == 'y':
                 empty_bucket(GlueDemo.__get_bucket_name_from_stack_name(self,stack_name),s3_resource)
                 print(f'Preparing to delete Stack{self.stack_name}')        
-                self.cf_wrapper.delete_stack(self.stack_name)
+                cf_wrapper.delete_stack(self.stack_name)
                 if wrapper.get_database(self.glue_db_name):
                     wrapper.delete_database(self.glue_db_name)
                     print(f'Deleted {self.glue_db_name}')
